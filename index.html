@@ -878,8 +878,18 @@
 
     showPage('page-score');
 
+    // Build per-word answer log for Supabase
+    const answers = selected.map((w, idx) => {
+      const r = results[idx];
+      return {
+        word: w.answer,
+        typed: r ? r.userAnswer : null,
+        correct: r ? r.correct : false
+      };
+    });
+
     // Save score silently — leaderboard renders when user navigates to it
-    saveScore(correct, WORDS_PER_GAME, wrong, skipped, timedOut)
+    saveScore(correct, WORDS_PER_GAME, wrong, skipped, timedOut, answers)
       .catch(err => console.error('Leaderboard save failed:', err));
   }
 
@@ -926,14 +936,15 @@
     }
   }
 
-  async function saveScore(correct, total, wrong, skipped, timedOut){
+  async function saveScore(correct, total, wrong, skipped, timedOut, answers){
     try {
       const { data, error } = await sb
         .from('leaderboard')
         .insert({
           name: playerName,
           correct, total, wrong, skipped,
-          timed_out: timedOut
+          timed_out: timedOut,
+          answers: answers
         })
         .select()
         .single();
